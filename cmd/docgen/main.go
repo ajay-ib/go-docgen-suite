@@ -1,7 +1,7 @@
 package main
 
 import (
-	"embed"
+	_ "embed"
 	"fmt"
 	"io/fs"
 	"log"
@@ -9,13 +9,14 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/urfave/cli/v2"
+
 	"github.com/ajay-ib/go-docgen-suite/internal/generator"
 	"github.com/ajay-ib/go-docgen-suite/internal/godoc"
 	"github.com/ajay-ib/go-docgen-suite/internal/godocweb"
 	"github.com/ajay-ib/go-docgen-suite/internal/parser"
 	"github.com/ajay-ib/go-docgen-suite/internal/swaggo"
 	"github.com/ajay-ib/go-docgen-suite/internal/traversal"
-	"github.com/urfave/cli/v2"
 )
 
 //go:embed generate-docs.sh
