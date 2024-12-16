@@ -4,10 +4,12 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"path/filepath"
 )
 
-func GenerateMarkdown(content string) {
-	file, err := os.Create("Gen-README.md")
+func GenerateMarkdown(content, outputDir string) {
+	outputPath := filepath.Join(outputDir, "Gen-README.md")
+	file, err := os.Create(outputPath)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -17,5 +19,5 @@ func GenerateMarkdown(content string) {
 	if err != nil {
 		log.Fatal(err)
 	}
-	fmt.Println("Documentation generated successfully.")
+	fmt.Println("Documentation generated successfully at", outputPath)
 }

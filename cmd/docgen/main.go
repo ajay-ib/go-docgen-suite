@@ -6,14 +6,13 @@ import (
 	"os"
 	"strings"
 
-	"github.com/urfave/cli/v2"
-
 	"github.com/ajay-ib/go-docgen-suite/internal/generator"
 	"github.com/ajay-ib/go-docgen-suite/internal/godoc"
 	"github.com/ajay-ib/go-docgen-suite/internal/godocweb"
 	"github.com/ajay-ib/go-docgen-suite/internal/parser"
 	"github.com/ajay-ib/go-docgen-suite/internal/swaggo"
 	"github.com/ajay-ib/go-docgen-suite/internal/traversal"
+	"github.com/urfave/cli/v2"
 )
 
 func main() {
@@ -32,10 +31,17 @@ func main() {
 						Usage:    "Path to the Go service",
 						Required: true,
 					},
+					&cli.StringFlag{
+						Name:     "output",
+						Aliases:  []string{"o"},
+						Usage:    "Output directory for the generated documentation",
+						Required: true,
+					},
 				},
 				Action: func(c *cli.Context) error {
 					root := c.String("path")
-					return generateDocumentation(root)
+					output := c.String("output")
+					return generateDocumentation(root, output)
 				},
 			},
 			{
@@ -64,7 +70,7 @@ func main() {
 	}
 }
 
-func generateDocumentation(root string) error {
+func generateDocumentation(root, output string) error {
 	var contentBuilder strings.Builder
 
 	err := traversal.TraverseFiles(root, func(path string) error {
@@ -79,7 +85,7 @@ func generateDocumentation(root string) error {
 		return err
 	}
 
-	generator.GenerateMarkdown(contentBuilder.String())
+	generator.GenerateMarkdown(contentBuilder.String(), output)
 
 	if err := godoc.GenerateGodoc(root); err != nil {
 		return fmt.Errorf("error generating Godoc: %v", err)
