@@ -1,8 +1,9 @@
 package main
 
 import (
+	"embed"
 	"fmt"
-	"io"
+	"io/fs"
 	"log"
 	"os"
 	"path/filepath"
@@ -16,6 +17,9 @@ import (
 	"github.com/ajay-ib/go-docgen-suite/internal/traversal"
 	"github.com/urfave/cli/v2"
 )
+
+//go:embed generate-docs.sh
+var generateDocsScript string
 
 func main() {
 	app := &cli.App{
@@ -118,29 +122,11 @@ func generateDocumentation(root, output string) error {
 }
 
 func installScript(targetPath string) error {
-	scriptPath := filepath.Join("cmd", "docgen", "generate-docs.sh")
 	targetScriptPath := filepath.Join(targetPath, "generate-docs.sh")
 
-	srcFile, err := os.Open(scriptPath)
+	err := os.WriteFile(targetScriptPath, []byte(generateDocsScript), fs.ModePerm)
 	if err != nil {
-		return fmt.Errorf("error opening script: %v", err)
-	}
-	defer srcFile.Close()
-
-	dstFile, err := os.Create(targetScriptPath)
-	if err != nil {
-		return fmt.Errorf("error creating target script: %v", err)
-	}
-	defer dstFile.Close()
-
-	_, err = io.Copy(dstFile, srcFile)
-	if err != nil {
-		return fmt.Errorf("error copying script: %v", err)
-	}
-
-	err = os.Chmod(targetScriptPath, 0755)
-	if err != nil {
-		return fmt.Errorf("error setting script permissions: %v", err)
+		return fmt.Errorf("error writing script: %v", err)
 	}
 
 	fmt.Println("Script installed successfully at", targetScriptPath)
