@@ -7,5 +7,3 @@
 # Output of the go coverage tool
 *.out
 
-# Dependency directories
-vendor/
