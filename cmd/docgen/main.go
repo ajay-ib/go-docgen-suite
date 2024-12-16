@@ -25,6 +25,14 @@ func main() {
 				Name:    "generate",
 				Aliases: []string{"g"},
 				Usage:   "Generate documentation",
+				Flags: []cli.Flag{
+					&cli.StringFlag{
+						Name:     "path",
+						Aliases:  []string{"p"},
+						Usage:    "Path to the Go service",
+						Required: true,
+					},
+				},
 				Action: func(c *cli.Context) error {
 					root := c.String("path")
 					return generateDocumentation(root)
@@ -34,6 +42,14 @@ func main() {
 				Name:    "serve",
 				Aliases: []string{"s"},
 				Usage:   "Serve documentation via web interface",
+				Flags: []cli.Flag{
+					&cli.StringFlag{
+						Name:     "path",
+						Aliases:  []string{"p"},
+						Usage:    "Path to the Go service",
+						Required: true,
+					},
+				},
 				Action: func(c *cli.Context) error {
 					root := c.String("path")
 					return godocweb.ServeGodocWeb(root)
