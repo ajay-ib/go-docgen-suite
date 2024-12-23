@@ -95,33 +95,33 @@ func main() {
 }
 
 func generateDocumentation(root, output string) error {
-	var developerDoc, copilotDoc strings.Builder
+    var developerDoc, copilotDoc strings.Builder
 
-	err := traversal.TraverseFiles(root, func(path string) error {
-		content, err := parser.ParseFile(path)
-		if err != nil {
-			return err
-		}
-		developerDoc.WriteString(content.DeveloperDoc)
-		copilotDoc.WriteString(content.CopilotDoc)
-		return nil
-	})
-	if err != nil {
-		return err
-	}
+    err := traversal.TraverseFiles(root, func(path string) error {
+        content, err := parser.ParseFile(path)
+        if err != nil {
+            return err
+        }
+        developerDoc.WriteString(content.DeveloperDoc)
+        copilotDoc.WriteString(content.CopilotDoc)
+        return nil
+    })
+    if err != nil {
+        return err
+    }
 
-	generator.GenerateMarkdown(developerDoc.String(), output, "developer_doc.md")
-	generator.GenerateJSON(copilotDoc.String(), output, "copilot_doc.json")
+    generator.GenerateMarkdown(developerDoc.String(), output, "developer_doc.md")
+    generator.GenerateJSON(copilotDoc.String(), output, "copilot_doc.json")
 
-	if err := godoc.GenerateGodoc(root); err != nil {
-		return fmt.Errorf("error generating Godoc: %v", err)
-	}
+    if err := godoc.GenerateGodoc(root); err != nil {
+        return fmt.Errorf("error generating Godoc: %v", err)
+    }
 
-	if err := swaggo.GenerateSwaggoDocs(root); err != nil {
-		return fmt.Errorf("error generating Swaggo docs: %v", err)
-	}
+    if err := swaggo.GenerateSwaggoDocs(root); err != nil {
+        return fmt.Errorf("error generating Swaggo docs: %v", err)
+    }
 
-	return nil
+    return nil
 }
 
 func installScript(targetPath string) error {
