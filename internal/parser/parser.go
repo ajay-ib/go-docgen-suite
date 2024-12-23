@@ -1,6 +1,7 @@
 package parser
 
 import (
+    "encoding/json"
     "fmt"
     "go/ast"
     "go/parser"
@@ -13,6 +14,13 @@ type ParsedContent struct {
     CopilotDoc   string
 }
 
+type CopilotEntry struct {
+    Type        string `json:"type"`
+    Name        string `json:"name"`
+    Description string `json:"description"`
+    Signature   string `json:"signature"`
+}
+
 func ParseFile(filename string) (ParsedContent, error) {
     fset := token.NewFileSet()
     node, err := parser.ParseFile(fset, filename, nil, parser.ParseComments)
@@ -20,41 +28,63 @@ func ParseFile(filename string) (ParsedContent, error) {
         return ParsedContent{}, err
     }
 
-    var developerDoc, copilotDoc strings.Builder
+    var developerDoc strings.Builder
+    var copilotEntries []CopilotEntry
+
     for _, decl := range node.Decls {
         switch d := decl.(type) {
         case *ast.GenDecl:
             for _, spec := range d.Specs {
                 switch s := spec.(type) {
                 case *ast.TypeSpec:
-                    processTypeSpec(s, d.Doc, &developerDoc, &copilotDoc)
+                    processTypeSpec(s, d.Doc, &developerDoc, &copilotEntries)
                 }
             }
         case *ast.FuncDecl:
-            processFuncDecl(d, &developerDoc, &copilotDoc)
+            processFuncDecl(d, &developerDoc, &copilotEntries)
         }
     }
+
+    copilotDoc, err := json.MarshalIndent(copilotEntries, "", "  ")
+    if err != nil {
+        return ParsedContent{}, err
+    }
+
     return ParsedContent{
         DeveloperDoc: developerDoc.String(),
-        CopilotDoc:   copilotDoc.String(),
+        CopilotDoc:   string(copilotDoc),
     }, nil
 }
 
-func processTypeSpec(spec *ast.TypeSpec, doc *ast.CommentGroup, developerDoc, copilotDoc *strings.Builder) {
+func processTypeSpec(spec *ast.TypeSpec, doc *ast.CommentGroup, developerDoc *strings.Builder, copilotEntries *[]CopilotEntry) {
+    description := ""
     if doc != nil {
-        developerDoc.WriteString(doc.Text() + "\n")
+        description = doc.Text()
+        developerDoc.WriteString(description + "\n")
     }
     developerDoc.WriteString(fmt.Sprintf("Type: %s\n", spec.Name.Name))
-    copilotDoc.WriteString(fmt.Sprintf(`{"type": "type", "name": "%s", "description": "%s"}`, spec.Name.Name, doc.Text()))
+    *copilotEntries = append(*copilotEntries, CopilotEntry{
+        Type:        "type",
+        Name:        spec.Name.Name,
+        Description: description,
+        Signature:   "",
+    })
 }
 
-func processFuncDecl(decl *ast.FuncDecl, developerDoc, copilotDoc *strings.Builder) {
+func processFuncDecl(decl *ast.FuncDecl, developerDoc *strings.Builder, copilotEntries *[]CopilotEntry) {
+    description := ""
     if decl.Doc != nil {
-        developerDoc.WriteString(decl.Doc.Text() + "\n")
+        description = decl.Doc.Text()
+        developerDoc.WriteString(description + "\n")
     }
     developerDoc.WriteString(fmt.Sprintf("Function: %s\n", decl.Name.Name))
     developerDoc.WriteString(fmt.Sprintf("Signature: %s\n", formatFuncSignature(decl)))
-    copilotDoc.WriteString(fmt.Sprintf(`{"type": "function", "name": "%s", "description": "%s", "signature": "%s"}`, decl.Name.Name, decl.Doc.Text(), formatFuncSignature(decl)))
+    *copilotEntries = append(*copilotEntries, CopilotEntry{
+        Type:        "function",
+        Name:        decl.Name.Name,
+        Description: description,
+        Signature:   formatFuncSignature(decl),
+    })
 }
 
 func formatFuncSignature(decl *ast.FuncDecl) string {
