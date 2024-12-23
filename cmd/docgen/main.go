@@ -123,15 +123,3 @@ func generateDocumentation(root, output string) error {
 
     return nil
 }
-
-func installScript(targetPath string) error {
-	targetScriptPath := filepath.Join(targetPath, "generate-docs.sh")
-
-	err := os.WriteFile(targetScriptPath, []byte(generateDocsScript), fs.ModePerm)
-	if err != nil {
-		return fmt.Errorf("error writing script: %v", err)
-	}
-
-	fmt.Println("Script installed successfully at", targetScriptPath)
-	return nil
-}

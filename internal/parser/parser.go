@@ -53,5 +53,29 @@ func processFuncDecl(decl *ast.FuncDecl, developerDoc, copilotDoc *strings.Build
         developerDoc.WriteString(decl.Doc.Text() + "\n")
     }
     developerDoc.WriteString(fmt.Sprintf("Function: %s\n", decl.Name.Name))
-    copilotDoc.WriteString(fmt.Sprintf(`{"type": "function", "name": "%s", "description": "%s"}`, decl.Name.Name, decl.Doc.Text()))
+    developerDoc.WriteString(fmt.Sprintf("Signature: %s\n", formatFuncSignature(decl)))
+    copilotDoc.WriteString(fmt.Sprintf(`{"type": "function", "name": "%s", "description": "%s", "signature": "%s"}`, decl.Name.Name, decl.Doc.Text(), formatFuncSignature(decl)))
+}
+
+func formatFuncSignature(decl *ast.FuncDecl) string {
+    var params, results []string
+    for _, param := range decl.Type.Params.List {
+        paramType := fmt.Sprintf("%s", param.Type)
+        for _, name := range param.Names {
+            params = append(params, fmt.Sprintf("%s %s", name.Name, paramType))
+        }
+    }
+    if decl.Type.Results != nil {
+        for _, result := range decl.Type.Results.List {
+            resultType := fmt.Sprintf("%s", result.Type)
+            if len(result.Names) > 0 {
+                for _, name := range result.Names {
+                    results = append(results, fmt.Sprintf("%s %s", name.Name, resultType))
+                }
+            } else {
+                results = append(results, resultType)
+            }
+        }
+    }
+    return fmt.Sprintf("func(%s) (%s)", strings.Join(params, ", "), strings.Join(results, ", "))
 }
