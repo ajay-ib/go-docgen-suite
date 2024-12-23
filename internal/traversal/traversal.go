@@ -11,7 +11,13 @@ func TraverseFiles(root string, processFile func(string) error) error {
 		if err != nil {
 			return fmt.Errorf("error accessing path %q: %v", path, err)
 		}
-		if !info.IsDir() && filepath.Ext(path) == ".go" {
+		if info.IsDir() {
+			if info.Name() == "vendor" {
+				return filepath.SkipDir
+			}
+			return nil
+		}
+		if filepath.Ext(path) == ".go" {
 			fmt.Println("Processing file:", path)
 			if err := processFile(path); err != nil {
 				return fmt.Errorf("error processing file %q: %v", path, err)

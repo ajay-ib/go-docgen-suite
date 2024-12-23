@@ -95,21 +95,23 @@ func main() {
 }
 
 func generateDocumentation(root, output string) error {
-	var contentBuilder strings.Builder
+	var developerDoc, copilotDoc strings.Builder
 
 	err := traversal.TraverseFiles(root, func(path string) error {
 		content, err := parser.ParseFile(path)
 		if err != nil {
 			return err
 		}
-		contentBuilder.WriteString(content)
+		developerDoc.WriteString(content.DeveloperDoc)
+		copilotDoc.WriteString(content.CopilotDoc)
 		return nil
 	})
 	if err != nil {
 		return err
 	}
 
-	generator.GenerateMarkdown(contentBuilder.String(), output)
+	generator.GenerateMarkdown(developerDoc.String(), output, "developer_doc.md")
+	generator.GenerateJSON(copilotDoc.String(), output, "copilot_doc.json")
 
 	if err := godoc.GenerateGodoc(root); err != nil {
 		return fmt.Errorf("error generating Godoc: %v", err)
